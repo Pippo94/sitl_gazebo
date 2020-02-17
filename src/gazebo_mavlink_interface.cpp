@@ -319,12 +319,12 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
     presetManager->CurrentProfile("default_physics");
 
     // We currently need to have the max_step_size pinned at 4 ms and the
-    // real_time_update_rate set to 250 Hz for lockstep.
+    // real_time_update_rate set to 500 Hz for lockstep.
     // Therefore it makes sense to check these params.
 
     presetManager->GetCurrentProfileParam("real_time_update_rate", param);
     double real_time_update_rate = boost::any_cast<double>(param);
-    const double correct_real_time_update_rate = 250.0;
+    const double correct_real_time_update_rate = 500.0;
     if (real_time_update_rate != correct_real_time_update_rate)
     {
       gzerr << "real_time_update_rate is set to " << real_time_update_rate
@@ -334,7 +334,7 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
     presetManager->GetCurrentProfileParam("max_step_size", param);
     const double max_step_size = boost::any_cast<double>(param);
-    const double correct_max_step_size = 0.004;
+    const double correct_max_step_size = 0.002;
     if (max_step_size != correct_max_step_size)
     {
       gzerr << "max_step_size is set to " << max_step_size
@@ -659,6 +659,11 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo&  /*_info*/) {
   }
 
   previous_imu_seq_ = last_imu_message_.seq();
+
+  if (previous_imu_seq_ % 2 == 0) {
+    // Ignore every second sample.
+    return;
+  }
 
 #if GAZEBO_MAJOR_VERSION >= 9
   common::Time current_time = world_->SimTime();
